@@ -3,10 +3,10 @@ from __future__ import annotations
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import device_info
 from .const import (DOMAIN, MAX_TEMP, MIN_TEMP, MODE_COOL, MODE_DRY, MODE_HEAT, MODE_OFF,
                     RECONCILE_SECONDS)
 
@@ -35,10 +35,7 @@ class VestelClimate(CoordinatorEntity, ClimateEntity):
         super().__init__(coord)
         self._id, self._card = dev["deviceId"], dev.get("wifiCardType", "HM07")
         self._attr_unique_id = self._id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._id)}, name=f"{dev.get('roomName') or dev['deviceName']} AC",
-            manufacturer="Vestel", model=dev.get("deviceModel"), sw_version=dev.get("wifiVersion"),
-            suggested_area=dev.get("roomName"))
+        self._attr_device_info = device_info(dev)
         self._opt: dict = {}     # optimistic overrides until next poll
         self._last_on = MODE_HEAT
         self._unsub = None

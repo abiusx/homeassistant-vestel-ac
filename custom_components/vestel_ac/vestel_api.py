@@ -61,7 +61,7 @@ class VestelApi:
         g = int(x["ACGENSI"])
         return {"mode": g & 7, "fan": g >> 3, "target": int(x["ACTEMOT"]) - TEMP_OFFSET,
                 "room": int(x["ACROOTE"]), "error": int(x.get("ACERROR", 0)),
-                "rssi": int(x.get("CONNRSS", 0)), "raw": x}
+                "rssi": int(x.get("CONNRSS", 0)), "fanpo": int(x.get("ACFANPO", 0)), "raw": x}
 
     async def command(self, dev: str, code: str, card: str = "HM07"):
         body = {"device_type": "AC", "wifi_card_type": card, "brand": "Vestel",
@@ -76,3 +76,6 @@ class VestelApi:
 
     async def set_temp(self, dev: str, t: int, card: str = "HM07"):
         return await self.command(dev, f"ACTEMOT{t + TEMP_OFFSET:05d}", card)
+
+    async def set_fanpo(self, dev: str, value: int, card: str = "HM07"):
+        return await self.command(dev, f"ACFANPO{value:05d}", card)
