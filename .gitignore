@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+creds*.json
+.DS_Store

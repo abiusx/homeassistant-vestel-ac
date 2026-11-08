@@ -1,0 +1,14 @@
+{
+  "domain": "vestel_ac",
+  "name": "Vestel AC (cloud)",
+  "codeowners": [
+    "@abiusx"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/abiusx/homeassistant-vestel-ac",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/abiusx/homeassistant-vestel-ac/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

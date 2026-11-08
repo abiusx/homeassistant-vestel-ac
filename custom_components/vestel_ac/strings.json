@@ -1,0 +1,12 @@
+{
+  "config": {
+    "step": {
+      "user": {"title": "Vestel AC", "description": "Cognito app credentials and a refresh token from the Vestel Akıllı Yaşam app.",
+        "data": {"client_id": "Client ID", "client_secret": "Client secret", "refresh_token": "Refresh token", "username": "Account email (label only)"}},
+      "reauth_confirm": {"title": "Vestel AC", "description": "The refresh token stopped working. Paste a new one.",
+        "data": {"refresh_token": "Refresh token"}}
+    },
+    "error": {"invalid_auth": "Token refresh rejected", "cannot_connect": "Cannot reach the Vestel cloud"},
+    "abort": {"already_configured": "Already configured", "reauth_successful": "Re-authenticated"}
+  }
+}
