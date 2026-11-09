@@ -9,7 +9,8 @@ Tested on Home Assistant 2025.9 with four Vestel FLORA units (Wi-Fi card HM07).
 
 ## What it controls
 
-- Mode: off, cool, heat, dry
+- Mode: off, auto, cool, heat, dry, fan only. In fan only the unit picks fan speed 1 and 25 °C
+  by itself. In auto it chooses cooling or heating from the room temperature.
 - Fan: auto, 1–5
 - Target temperature: 18–30 °C, in 1 °C steps
 - Reads room temperature, error code and Wi-Fi signal strength
@@ -62,7 +63,7 @@ refresh token valid is not documented. If it stops working, Home Assistant shows
 - API base `https://sh-native-api.homevsmart.com/v1.0`, header `token: <id_token>`.
   `GET /homes`, `GET /homes/{homeId}/devices`, `GET /homeappliances/legacy/status?uuid={deviceId}`,
   `POST /customer/devices/{deviceId}/legacy/command`.
-- Status fields: `ACGENSI = fan << 3 | mode` (mode 1 cool, 2 dry, 4 heat, 5 off; fan 0 auto, 1–5),
+- Status fields: `ACGENSI = fan << 3 | mode` (mode 0 auto, 1 cool, 2 dry, 3 fan only, 4 heat, 5 off; fan 0 auto, 1–5),
   `ACTEMOT = target °C + 32736`, `ACROOTE = room °C`. Commands send the same fields back, for
   example `ACTEMOT32760` sets 24 °C.
 - `ACFANPO` is a bit field: bit 0 turbo, bits 1–3 vertical swing (0–6), bits 4–6 horizontal swing

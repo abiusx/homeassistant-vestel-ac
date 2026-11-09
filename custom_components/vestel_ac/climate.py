@@ -7,10 +7,11 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import device_info
-from .const import (DOMAIN, MAX_TEMP, MIN_TEMP, MODE_COOL, MODE_DRY, MODE_HEAT, MODE_OFF,
+from .const import (DOMAIN, MAX_TEMP, MIN_TEMP, MODE_AUTO, MODE_COOL, MODE_DRY, MODE_FAN, MODE_HEAT, MODE_OFF,
                     RECONCILE_SECONDS)
 
-TO_HA = {MODE_COOL: HVACMode.COOL, MODE_DRY: HVACMode.DRY, MODE_HEAT: HVACMode.HEAT, MODE_OFF: HVACMode.OFF}
+TO_HA = {MODE_AUTO: HVACMode.AUTO, MODE_COOL: HVACMode.COOL, MODE_DRY: HVACMode.DRY,
+         MODE_FAN: HVACMode.FAN_ONLY, MODE_HEAT: HVACMode.HEAT, MODE_OFF: HVACMode.OFF}
 FROM_HA = {v: k for k, v in TO_HA.items()}
 FANS = ["auto", "1", "2", "3", "4", "5"]
 
@@ -24,7 +25,7 @@ class VestelClimate(CoordinatorEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY]
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY]
     _attr_fan_modes = FANS
     _attr_min_temp, _attr_max_temp, _attr_target_temperature_step = MIN_TEMP, MAX_TEMP, 1
     _attr_supported_features = (ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
@@ -38,6 +39,7 @@ class VestelClimate(CoordinatorEntity, ClimateEntity):
         self._attr_device_info = device_info(dev)
         self._opt: dict = {}     # optimistic overrides until next poll
         self._last_on = MODE_HEAT
+        self._fan_normal = 0     # fan setting outside fan-only mode (fan-only forces speed 1)
         self._unsub = None
 
     @property
@@ -74,8 +76,10 @@ class VestelClimate(CoordinatorEntity, ClimateEntity):
     def _handle_coordinator_update(self):
         self._opt = {}
         m = (self.coordinator.data or {}).get(self._id, {}).get("mode")
-        if m in (MODE_COOL, MODE_DRY, MODE_HEAT):
+        if m in (MODE_AUTO, MODE_COOL, MODE_DRY, MODE_FAN, MODE_HEAT):
             self._last_on = m
+        if m in (MODE_AUTO, MODE_COOL, MODE_DRY, MODE_HEAT):
+            self._fan_normal = (self.coordinator.data or {}).get(self._id, {}).get("fan", self._fan_normal)
         super()._handle_coordinator_update()
 
     def _reconcile(self):
@@ -89,8 +93,12 @@ class VestelClimate(CoordinatorEntity, ClimateEntity):
 
     async def _gensi(self, fan=None, mode=None):
         s = self._st
-        fan = s.get("fan", 0) if fan is None else fan
         mode = s.get("mode", MODE_HEAT) if mode is None else mode
+        if fan is None:
+            # leaving fan-only: restore the fan the unit had before, not the speed fan-only forced
+            fan = self._fan_normal if s.get("mode") == MODE_FAN and mode != MODE_FAN else s.get("fan", 0)
+        elif mode != MODE_FAN:
+            self._fan_normal = fan
         await self.coordinator.api.set_gensi(self._id, fan, mode, self._card)
         self._opt.update(fan=fan, mode=mode)
         self.async_write_ha_state()
